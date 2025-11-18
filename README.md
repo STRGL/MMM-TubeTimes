@@ -13,6 +13,8 @@ This module displays real-time arrival times for Transport for London (TFL) serv
 
 The module shows upcoming train arrivals with estimated times and displays line status information including service disruptions and planned works.
 
+<img src="screenshot-0.png" width="350" alt="Screenshot">
+
 ## Installation
 
 Navigate into your MagicMirror's `modules` folder and execute:
