@@ -18,7 +18,7 @@ The module shows upcoming train arrivals with estimated times and displays line 
 Navigate into your MagicMirror's `modules` folder and execute:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/MMM-TubeTimes.git
+git clone https://github.com/STRGL/MMM-TubeTimes.git
 cd MMM-TubeTimes
 npm install
 ```
