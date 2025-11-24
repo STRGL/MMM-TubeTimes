@@ -33,13 +33,13 @@ The entry in `config.js` can include the following options. _All arguments are o
 
 | Option | Description |
 |--------|-------------|
-| `title` | Custom title to display in the module header. **Type:** string **Default value:** "Tube Times" |
-| `lineId` | TFL line ID(s). Can be a single line (e.g., "central") or a comma-separated list (e.g., "central,piccadilly"). **Recommended:** Only include lines that actually stop at your `stopPointId` to avoid displaying irrelevant status information. **Type:** string **Default value:** "central" |
-| `stopPointId` | TFL stop point ID (Naptan ID) for the station. Find your station's ID at [TFL API StopPoint search](https://api.tfl.gov.uk/swagger/ui/index.html?url=/swagger/docs/v1#!/StopPoint/StopPoint_Search). **Type:** string **Default value:** "940GZZLUOXC" |
-| `direction` | Direction filter for arrivals. Options: "all", "inbound", or "outbound". **Type:** string **Default value:** "all" |
-| `updateInterval` | How often the arrival times are updated (in milliseconds). **Type:** number **Default value:** 20000 (20 seconds) |
-| `statusUpdateInterval` | How often the line status is updated (in milliseconds). **Type:** number **Default value:** 3600000 (1 hour) |
-| `limit` | Maximum number of journeys to display. **Type:** number **Default value:** 8 |
+| `title` | Custom title to display in the module header <br> **Type:** string <br> **Default value:** "Tube Times" |
+| `lineId` | TFL line ID(s). Can be a single line (e.g., "central") or a comma-separated list (e.g., "central,piccadilly"). **Recommended:** Only include lines that actually stop at your `stopPointId` to avoid displaying irrelevant status information. <br>**Type:** string <br>**Default value:** "central" |
+| `stopPointId` | TFL stop point ID (Naptan ID) for the station. Find your station's ID at [TFL API StopPoint search](https://api.tfl.gov.uk/swagger/ui/index.html?url=/swagger/docs/v1#!/StopPoint/StopPoint_Search). <br>**Type:** string <br>**Default value:** "940GZZLUOXC" |
+| `direction` | Direction filter for arrivals. Options: "all", "inbound", or "outbound". <br>**Type:** string <br>**Default value:** "all" |
+| `updateInterval` | How often the arrival times are updated (in milliseconds). <br>**Type:** number <br>**Default value:** 20000 (20 seconds) |
+| `statusUpdateInterval` | How often the line status is updated (in milliseconds). <br>**Type:** number <br>**Default value:** 3600000 (1 hour) |
+| `limit` | Maximum number of journeys to display. <br>**Type:** number <br>**Default value:** 8 |
 
 ### Finding Your Station ID
 
@@ -47,7 +47,7 @@ To find your station's `stopPointId`:
 
 1. Visit the [TFL API StopPoint search](https://api.tfl.gov.uk/swagger/ui/index.html?url=/swagger/docs/v1#!/StopPoint/StopPoint_Search)
 2. Search for your station name
-3. Look for the `id` field in the response (it will be a string like "910GWDRYTON")
+3. Look for the `id` field in the response (it will be a string like "940GZZLUOXC")
 4. Alternatively, you can use the TFL website's station page URL - the stop point ID is often visible in the URL or page source
 
 ### Example Configuration
@@ -59,7 +59,7 @@ Here is an example of an entry in `config.js`:
     module: 'MMM-TubeTimes',
     position: 'bottom_right',
     config: {
-        title: 'OxfordCircus',
+        title: 'Oxford Circus',
         lineId: 'central',
         stopPointId: '940GZZLUOXC',
         direction: 'inbound',
