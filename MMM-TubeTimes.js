@@ -78,26 +78,48 @@ Module.register("MMM-TubeTimes", {
   },
 
   start() {
-    Log.log("Starting module: " + this.name);
+	Log.log("Starting module: " + this.name);
 	this.addFilters();
 
-    // Set up the local values, here we construct the request url to use
-    this.loaded = false;
-    this.url = `https://api.tfl.gov.uk/Line/${this.config.lineId}/Arrivals/${this.config.stopPointId}?direction=${this.config.direction}`;
-    this.location = "";
-    this.serviceURL = `https://api.tfl.gov.uk/Line/${this.config.lineId}/Status`;
-    this.tubeStatus = "good";
-    this.result = null;
-	this.tubeStatusDescription = null;
-	this.combinedMessages = [];
-	this.activeMessage = 0
-    if (!this.config.limit || this.config.limit < 1) {
-      this.config.limit = 8; // fallback to default
-    }
+	// Set up the local values, here we construct the request url to use
+	// Only initialize if undefined - preserve existing data if module restarts
+	if (this.loaded === undefined) {
+		const hasValidData = Array.isArray(this.result) && this.result.length > 0;
+		this.loaded = hasValidData;
+	} else if (Array.isArray(this.result) && this.result.length > 0 && !this.loaded) {
+		this.loaded = true;
+	}
 
-    // Trigger the first request
-    this.getTubeStatusData(this);
-    this.getTubeLineStatusData(this);
+	this.url = `https://api.tfl.gov.uk/Line/${this.config.lineId}/Arrivals/${this.config.stopPointId}?direction=${this.config.direction}`;
+	this.location = "";
+	this.serviceURL = `https://api.tfl.gov.uk/Line/${this.config.lineId}/Status`;
+
+	// Only reset status-related fields, not data fields
+	if (this.tubeStatus === undefined) {
+		this.tubeStatus = "good";
+	}
+	if (this.tubeStatusDescription === undefined) {
+		this.tubeStatusDescription = null;
+	}
+	if (this.combinedMessages === undefined) {
+		this.combinedMessages = [];
+	}
+	if (this.activeMessage === undefined) {
+		this.activeMessage = 0;
+	}
+
+	// Only initialize result if undefined - don't reset if we have data
+	if (this.result === undefined) {
+		this.result = null;
+	}
+
+	if (!this.config.limit || this.config.limit < 1) {
+		this.config.limit = 8; // fallback to default
+	}
+
+	// Trigger the first request
+	this.getTubeStatusData(this);
+	this.getTubeLineStatusData(this);
   },
 
   getStyles() {
@@ -121,19 +143,6 @@ Module.register("MMM-TubeTimes", {
     setTimeout(that.getTubeLineStatusData, that.config.statusUpdateInterval, that);
   },
 
-  /**
-   * @returns {string} Color name for border based on tube status
-   */
-  getTubeStatusBorderColor() {
-    Log.log("Tube Status: ", this.tubeStatus);
-    if (this.tubeStatus === "good") {
-      return "green";
-    } else if (this.tubeStatus === "severe") {
-      return "red";
-    } else {
-      return "orange";
-    }
-  },
 
   getTemplate() {
     return "MMM-TubeTimes.njk";
@@ -141,31 +150,32 @@ Module.register("MMM-TubeTimes", {
 
   getTemplateData() {
 	/** @type {TFLArrival[]} */
-	const journeys = this.result || [];
-	 /** @type {TFLArrival[]} */
-	 const filteredJourneys = journeys
-	 .filter((journey) => {
-		const now = new Date();
-		const expectedArrival = new Date(journey.expectedArrival);
-		const timeToLive = new Date(journey.timeToLive);
+	const journeys = (this.result === null || this.result === undefined || !Array.isArray(this.result)) ? [] : this.result;
 
-		// Only filter out:
-		// 1. Past arrivals
-		// 2. Expired predictions (timeToLive in the past)
-		return expectedArrival >= now && timeToLive >= now;
-	  })
-	 .sort((a, b) => new Date(a.expectedArrival).getTime() - new Date(b.expectedArrival).getTime())
-	 .slice(0, this.config.limit)
+	/** @type {TFLArrival[]} */
+	const filteredJourneys = journeys
+		.filter((journey) => {
+			const now = new Date();
+			const expectedArrival = new Date(journey.expectedArrival);
+			const timeToLive = new Date(journey.timeToLive);
 
-    return {
+			// Only filter out:
+			// 1. Past arrivals
+			// 2. Expired predictions (timeToLive in the past)
+			return expectedArrival >= now && timeToLive >= now;
+		})
+		.sort((a, b) => new Date(a.expectedArrival).getTime() - new Date(b.expectedArrival).getTime())
+		.slice(0, this.config.limit);
+
+	return {
 		line: this.config.title,
 		journeys: filteredJourneys,
 		loaded: this.loaded,
-      	activeMessage: this.activeMessage,
+		activeMessage: this.activeMessage,
 		tubeStatus: this.tubeStatus,
 		tubeStatusDescription: this.tubeStatusDescription,
 		statusMessages: this.combinedMessages,
-    };
+	};
   },
 
   addFilters() {
@@ -229,24 +239,27 @@ Module.register("MMM-TubeTimes", {
    * @param {TubeTimesPayload|TubeLineStatusPayload} payload
    */
   socketNotificationReceived(notification, payload) {
-    // check to see if the response was for us and used the same url
-    if (notification === "GOT-TUBE-TIMES" && "url" in payload && payload.url === this.url) {
-      // we got some data so set the flag, stash the data to display then request the dom update
-      this.loaded = true;
-      this.result = payload.result;
-	  if(this.activeMessage + 1 >= this.combinedMessages.length) {
-		this.activeMessage = 0;
-	 } else {
-		this.activeMessage++;
-	 }
-      this.updateDom(0);
-    }
+	// check to see if the response was for us and used the same url
+	if (notification === "GOT-TUBE-TIMES" && "url" in payload && payload.url === this.url) {
+		// we got some data so set the flag, stash the data to display then request the dom update
+		this.loaded = true;
+		this.result = payload.result;
+		if (this.activeMessage + 1 >= this.combinedMessages.length) {
+			this.activeMessage = 0;
+		} else {
+			this.activeMessage++;
+		}
+		this.updateDom(100);
+	}
 
-    if (notification === "GOT-TUBE-LINE-STATUS" && "serviceURL" in payload && payload.serviceURL === this.serviceURL) {
-      this.tubeStatus = payload.tubeStatus;
-      this.tubeStatusDescription = payload.tubeStatusDescription;
-      this.combinedMessages = payload.combinedMessages;
-      this.updateDom(1000);
-    }
+	if (notification === "GOT-TUBE-LINE-STATUS" && "serviceURL" in payload && payload.serviceURL === this.serviceURL) {
+		this.tubeStatus = payload.tubeStatus;
+		this.tubeStatusDescription = payload.tubeStatusDescription;
+		this.combinedMessages = payload.combinedMessages;
+		// Only update DOM if we already have train data, otherwise let GOT-TUBE-TIMES handle it
+		if (this.loaded && this.result && this.result.length > 0) {
+			this.updateDom(0);
+		}
+	}
   },
 });
